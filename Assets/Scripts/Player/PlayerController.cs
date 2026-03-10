@@ -25,12 +25,11 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         input = GetComponent<InputHandler>();
+        rb = GetComponent<Rigidbody2D>();
     }
 
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-
         gravity = 2 * jumpHeight / Mathf.Pow(timeToApex, 2);
         jumpVelocity = gravity * timeToApex;
 
@@ -49,7 +48,7 @@ public class PlayerController : MonoBehaviour
         {
             rb.linearVelocity = new Vector2(PlayerVelocityX, jumpVelocity);
             input.ResetJump();
-            Debug.Log("Max Jump Distance: " + MaxJumpDistance(PlayerVelocityX));
+            // Debug.Log("Max Jump Distance: " + MaxJumpDistance(PlayerVelocityX));
         }
     }
 
@@ -60,17 +59,23 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
     }
 
-    public float MaxJumpDistance(float horizontalSpeed)
+    // public float MaxJumpDistance(float horizontalSpeed)
+    // {
+    //     return horizontalSpeed * (timeToApex * 2);
+    // }
+
+    public float MaxJumpDistance()
     {
-        return horizontalSpeed * (timeToApex * 2);
+        return moveSpeed * timeToApex * 2;
     }
 
     void OnDrawGizmos()
     {
         if(!Application.isPlaying) return;
+        if(rb == null) return;
 
         Gizmos.color = Color.green;
         Gizmos.DrawLine(transform.position,
-        transform.position + Vector3.right * MaxJumpDistance(PlayerVelocityX));
+        transform.position + Vector3.right * MaxJumpDistance());
     }
 }
