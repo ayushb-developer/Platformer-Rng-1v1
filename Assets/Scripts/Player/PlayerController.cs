@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(InputHandler))]
@@ -5,12 +6,18 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] float moveSpeed = 8f;
-    [SerializeField] float jumpForce = 14f;
+    [SerializeField] float jumpHeight = 3f;
+    [SerializeField] float timeToApex = 0.35f;
+
 
     [SerializeField] Transform groundCheck;
     [SerializeField] LayerMask groundLayer;
 
     private InputHandler input;
+    float gravity;
+    float jumpVelocity;
+
+    public float PlayerVelocityX => rb.linearVelocity.x;
     
     Rigidbody2D rb;
     bool grounded;
@@ -23,6 +30,11 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        gravity = 2 * jumpHeight / Mathf.Pow(timeToApex, 2);
+        jumpVelocity = gravity * timeToApex;
+
+        rb.gravityScale = gravity / -Physics2D.gravity.y;
     }
 
     void Update()
@@ -35,15 +47,30 @@ public class PlayerController : MonoBehaviour
 
         if (input.JumpPressed && grounded)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            rb.linearVelocity = new Vector2(PlayerVelocityX, jumpVelocity);
             input.ResetJump();
+            Debug.Log("Max Jump Distance: " + MaxJumpDistance(PlayerVelocityX));
         }
     }
 
     void FixedUpdate()
     {
         float targetVelocity = input.MoveInput.x *moveSpeed;
-        float newX = Mathf.Lerp(rb.linearVelocity.x, targetVelocity, 10f * Time.fixedDeltaTime);
+        float newX = Mathf.Lerp(PlayerVelocityX, targetVelocity, 10f * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
+    }
+
+    public float MaxJumpDistance(float horizontalSpeed)
+    {
+        return horizontalSpeed * (timeToApex * 2);
+    }
+
+    void OnDrawGizmos()
+    {
+        if(!Application.isPlaying) return;
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(transform.position,
+        transform.position + Vector3.right * MaxJumpDistance(PlayerVelocityX));
     }
 }
