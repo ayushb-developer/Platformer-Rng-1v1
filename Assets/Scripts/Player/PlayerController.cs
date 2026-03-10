@@ -42,9 +42,8 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb.linearVelocity = new Vector2(
-            input.MoveInput.x * moveSpeed,
-            rb.linearVelocity.y
-        );
+        float targetVelocity = input.MoveInput.x *moveSpeed;
+        float newX = Mathf.Lerp(rb.linearVelocity.x, targetVelocity, 10f * Time.fixedDeltaTime);
+        rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
     }
 }
