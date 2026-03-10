@@ -4,11 +4,11 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 8f;
-    public float jumpForce = 14f;
+    [SerializeField] float moveSpeed = 8f;
+    [SerializeField] float jumpForce = 14f;
 
-    public Transform groundCheck;
-    public LayerMask groundLayer;
+    [SerializeField] Transform groundCheck;
+    [SerializeField] LayerMask groundLayer;
 
     private InputHandler input;
     
