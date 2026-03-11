@@ -7,6 +7,7 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] Transform startPoint;
     [SerializeField] PlayerController player;
     [SerializeField] PlatformPool pool;
+    [SerializeField] GameObject finishPlatformPrefab;
 
     [Header("Level Settings")]
     [SerializeField] int platformCount = 40;
@@ -22,7 +23,9 @@ public class LevelGenerator : MonoBehaviour
     
     float lastPlatformY;
     float lastPlatformEndX;
-    // List<GameObject> activePlatforms = new();
+    int platformsSpawned = 0;
+    bool finishSpawned = false;
+
     Queue<GameObject> activePlatforms = new();
 
     float SafeGap => player.MaxJumpDistance * gapMultiplier;
@@ -41,11 +44,14 @@ public class LevelGenerator : MonoBehaviour
         BoxCollider2D firstCollider = firstPlatform.GetComponent<BoxCollider2D>();
         lastPlatformEndX = startPoint.position.x + firstCollider.bounds.extents.x;
         lastPlatformY = startPoint.position.y;
+        platformsSpawned = 1;
     }
 
     void Update()
     {
-        if(lastPlatformEndX < player.transform.position.x + spawnDistance)
+        // if(finishSpawned) return;
+
+        while(lastPlatformEndX < player.transform.position.x + spawnDistance && !finishSpawned)
         {
             SpawnNextPlatform();
         }
@@ -54,6 +60,11 @@ public class LevelGenerator : MonoBehaviour
 
     void SpawnNextPlatform()
     {
+        if (platformsSpawned >= platformCount-1)
+        {
+            SpawnFinishPlatform();
+            return;
+        }
         float gap = Random.Range(minGap, SafeGap);
         float heightOffset = Random.Range(-maxHeightChange, maxHeightChange);
         
@@ -70,7 +81,27 @@ public class LevelGenerator : MonoBehaviour
 
         lastPlatformEndX = spawnX + halfWidth;
         lastPlatformY = spawnY;
-        Debug.Log("Platform Spawned");
+        platformsSpawned++;
+
+        Debug.Log($"Spawned Platform {platformsSpawned} at X: {spawnX}, Y: {spawnY}, gap: {gap}, heightOffset: {heightOffset}");
+    }
+
+    void SpawnFinishPlatform()
+    {
+        GameObject finish = Instantiate(finishPlatformPrefab);
+
+        BoxCollider2D collider = finish.GetComponent<BoxCollider2D>();
+        float halfWidth = collider.bounds.extents.x;
+
+        float spawnX = lastPlatformEndX + minGap + halfWidth;
+        float spawnY = lastPlatformY;
+
+        finish.transform.position = new Vector3(spawnX, spawnY, 0);
+
+        finishSpawned = true;
+        platformsSpawned++;
+
+        Debug.Log("Finish Platform Spawned");
     }
 
     void CleanupOldestPlatform()
