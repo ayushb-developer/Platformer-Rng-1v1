@@ -122,8 +122,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaec14a83156de742818236856def0d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  moveSpeed: 8
-  jumpForce: 14
+  settings: {fileID: 11400000, guid: 637b37dfb6023f046841efea4e6d251a, type: 2}
   groundCheck: {fileID: 3211994176797617823}
   groundLayer:
     serializedVersion: 2

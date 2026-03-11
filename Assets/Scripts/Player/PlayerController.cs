@@ -5,11 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] float moveSpeed = 8f;
-    [SerializeField] float jumpHeight = 3f;
-    [SerializeField] float timeToApex = 0.35f;
-
-
+    [SerializeField] PlayerSettings settings;
     [SerializeField] Transform groundCheck;
     [SerializeField] LayerMask groundLayer;
 
@@ -18,8 +14,8 @@ public class PlayerController : MonoBehaviour
     float jumpVelocity;
 
     public float PlayerVelocityX => rb.linearVelocity.x;
-    public float MaxJumpDistance => moveSpeed * timeToApex * 2;
-    
+    public float MaxJumpDistance => settings.baseSpeed * settings.timeToApex * 2;
+    public PlayerSettings Settings => settings;
     Rigidbody2D rb;
     bool grounded;
 
@@ -31,8 +27,8 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        gravity = 2 * jumpHeight / Mathf.Pow(timeToApex, 2);
-        jumpVelocity = gravity * timeToApex;
+        gravity = 2 * settings.jumpHeight / Mathf.Pow(settings.timeToApex, 2);
+        jumpVelocity = gravity * settings.timeToApex;
 
         rb.gravityScale = gravity / -Physics2D.gravity.y;
     }
@@ -55,7 +51,7 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        float targetVelocity = input.MoveInput.x *moveSpeed;
+        float targetVelocity = input.MoveInput.x *settings.baseSpeed;
         float newX = Mathf.Lerp(PlayerVelocityX, targetVelocity, 10f * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
     }

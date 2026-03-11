@@ -503,12 +503,7 @@ MonoBehaviour:
   player: {fileID: 1661384360}
   pool: {fileID: 199188527}
   finishPlatformPrefab: {fileID: 8128831915014167337, guid: 889de92bbdb0a2145bd4b3e85d882172, type: 3}
-  platformCount: 5
-  cleanupDistance: 35
-  spawnDistance: 25
-  minGap: 2
-  gapMultiplier: 0.8
-  maxHeightChange: 2
+  settings: {fileID: 11400000, guid: dadbd63025d0a314c8faa24361701a4b, type: 2}
 --- !u!4 &1566522957
 Transform:
   m_ObjectHideFlags: 0

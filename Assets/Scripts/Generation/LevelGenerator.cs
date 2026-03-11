@@ -9,17 +9,7 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] PlatformPool pool;
     [SerializeField] GameObject finishPlatformPrefab;
 
-    [Header("Level Settings")]
-    [SerializeField] int platformCount = 40;
-    [SerializeField] float cleanupDistance = 20f;
-    [SerializeField] float spawnDistance = 30f;
-
-    [Header("Gap Settings")]
-    [SerializeField] float minGap = 2f;
-    [SerializeField] float gapMultiplier = 0.8f;
-
-    [Header("Height Settings")]
-    [SerializeField] float maxHeightChange = 2f;
+    [SerializeField] LevelGenerationSettings settings;
     
     float lastPlatformY;
     float lastPlatformEndX;
@@ -28,7 +18,7 @@ public class LevelGenerator : MonoBehaviour
 
     Queue<GameObject> activePlatforms = new();
 
-    float SafeGap => player.MaxJumpDistance * gapMultiplier;
+    float SafeGap => player.MaxJumpDistance * settings.gapMultiplier;
 
     void Start()
     {
@@ -51,7 +41,7 @@ public class LevelGenerator : MonoBehaviour
     {
         // if(finishSpawned) return;
 
-        while(lastPlatformEndX < player.transform.position.x + spawnDistance && !finishSpawned)
+        while(lastPlatformEndX < player.transform.position.x + settings.spawnDistance && !finishSpawned)
         {
             SpawnNextPlatform();
         }
@@ -60,13 +50,13 @@ public class LevelGenerator : MonoBehaviour
 
     void SpawnNextPlatform()
     {
-        if (platformsSpawned >= platformCount-1)
+        if (platformsSpawned >= settings.platformCount-1)
         {
             SpawnFinishPlatform();
             return;
         }
-        float gap = Random.Range(minGap, SafeGap);
-        float heightOffset = Random.Range(-maxHeightChange, maxHeightChange);
+        float gap = Random.Range(settings.minGap, SafeGap);
+        float heightOffset = Random.Range(-settings.maxHeightChange, settings.maxHeightChange);
         
         GameObject newPlatform = pool.GetPlatform();
         BoxCollider2D collider = newPlatform.GetComponent<BoxCollider2D>();
@@ -93,7 +83,7 @@ public class LevelGenerator : MonoBehaviour
         BoxCollider2D collider = finish.GetComponent<BoxCollider2D>();
         float halfWidth = collider.bounds.extents.x;
 
-        float spawnX = lastPlatformEndX + minGap + halfWidth;
+        float spawnX = lastPlatformEndX + settings.minGap + halfWidth;
         float spawnY = lastPlatformY;
 
         finish.transform.position = new Vector3(spawnX, spawnY, 0);
@@ -110,7 +100,7 @@ public class LevelGenerator : MonoBehaviour
         {
             GameObject platform = activePlatforms.Peek();
 
-            if (platform.transform.position.x < player.transform.position.x - cleanupDistance)
+            if (platform.transform.position.x < player.transform.position.x - settings.cleanupDistance)
             {
                 pool.ReturnPlatform(platform);
                 activePlatforms.Dequeue();
