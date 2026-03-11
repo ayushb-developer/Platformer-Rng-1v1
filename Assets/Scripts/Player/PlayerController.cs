@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour
     float jumpVelocity;
 
     public float PlayerVelocityX => rb.linearVelocity.x;
+    public float MaxJumpDistance => moveSpeed * timeToApex * 2;
     
     Rigidbody2D rb;
     bool grounded;
@@ -64,10 +65,6 @@ public class PlayerController : MonoBehaviour
     //     return horizontalSpeed * (timeToApex * 2);
     // }
 
-    public float MaxJumpDistance()
-    {
-        return moveSpeed * timeToApex * 2;
-    }
 
     void OnDrawGizmos()
     {
@@ -76,6 +73,6 @@ public class PlayerController : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawLine(transform.position,
-        transform.position + Vector3.right * MaxJumpDistance());
+        transform.position + Vector3.right * MaxJumpDistance);
     }
 }

@@ -1,14 +1,17 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelGenerator : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] GameObject platformPrefab;
     [SerializeField] Transform startPoint;
     [SerializeField] PlayerController player;
+    [SerializeField] PlatformPool pool;
 
     [Header("Level Settings")]
     [SerializeField] int platformCount = 40;
+    [SerializeField] float cleanupDistance = 20f;
+    [SerializeField] float spawnDistance = 30f;
 
     [Header("Gap Settings")]
     [SerializeField] float minGap = 2f;
@@ -16,77 +19,75 @@ public class LevelGenerator : MonoBehaviour
 
     [Header("Height Settings")]
     [SerializeField] float maxHeightChange = 2f;
-
-    // float PlayerSpeed => player.PlayerVelocity;
-
-    Vector3 lastPlatformPosition;
+    
+    float lastPlatformY;
     float lastPlatformEndX;
+    // List<GameObject> activePlatforms = new();
+    Queue<GameObject> activePlatforms = new();
 
+    float SafeGap => player.MaxJumpDistance * gapMultiplier;
 
     void Start()
     {
-        GenerateLevel();
+        InitalizeFirstPlatform();
     }
 
-    void GenerateLevel()
+    void InitalizeFirstPlatform()
     {
-        Debug.Log("Generating Level...");
-        lastPlatformPosition = startPoint.position;
-
-        float maxJumpDistance = player.MaxJumpDistance();
-        float safeGap = maxJumpDistance * gapMultiplier;
+        GameObject firstPlatform = pool.GetPlatform();
+        firstPlatform.transform.position = startPoint.position;
+        activePlatforms.Enqueue(firstPlatform);
         
-        GameObject firstPlatform = Instantiate(platformPrefab, startPoint.position, Quaternion.identity);
         BoxCollider2D firstCollider = firstPlatform.GetComponent<BoxCollider2D>();
-
         lastPlatformEndX = startPoint.position.x + firstCollider.bounds.extents.x;
-        
-        for (int i = 0; i < platformCount; i++)
+        lastPlatformY = startPoint.position.y;
+    }
+
+    void Update()
+    {
+        if(lastPlatformEndX < player.transform.position.x + spawnDistance)
         {
-            float gap = Random.Range(minGap, safeGap);
-            float heightOffset = Random.Range(-maxHeightChange, maxHeightChange);
-            
-            
-            GameObject newPlatform = Instantiate(platformPrefab);
+            SpawnNextPlatform();
+        }
+        CleanupOldestPlatform();
+    }
 
-            BoxCollider2D collider = newPlatform.GetComponent<BoxCollider2D>();
+    void SpawnNextPlatform()
+    {
+        float gap = Random.Range(minGap, SafeGap);
+        float heightOffset = Random.Range(-maxHeightChange, maxHeightChange);
+        
+        GameObject newPlatform = pool.GetPlatform();
+        BoxCollider2D collider = newPlatform.GetComponent<BoxCollider2D>();
 
-            float halfWidth = collider.bounds.extents.x;
+        float halfWidth = collider.bounds.extents.x;
 
-            float spawnX = lastPlatformEndX + gap + halfWidth;
-            float spawnY = lastPlatformPosition.y + heightOffset;
+        float spawnX = lastPlatformEndX + gap + halfWidth;
+        float spawnY = lastPlatformY + heightOffset;
 
-            newPlatform.transform.position = new Vector3(spawnX, spawnY, 0);
+        newPlatform.transform.position = new Vector3(spawnX, spawnY, 0);
+        activePlatforms.Enqueue(newPlatform);
 
-            lastPlatformEndX = spawnX + halfWidth;
-                
-            // Vector3 spawnPos = new Vector3(
-            //     lastPlatformPosition.x + gap,
-            //     lastPlatformPosition.y + heightOffset,
-            //     0
-            // );
+        lastPlatformEndX = spawnX + halfWidth;
+        lastPlatformY = spawnY;
+        Debug.Log("Platform Spawned");
+    }
 
-            // GameObject newPlatform = Instantiate(
-            //     platformPrefab,
-            //     spawnPos,
-            //     Quaternion.identity
-            // );
-            // lastPlatformPosition = spawnPos;
+    void CleanupOldestPlatform()
+    {
+        while (activePlatforms.Count > 0)
+        {
+            GameObject platform = activePlatforms.Peek();
 
-            Debug.Log("Platform Spawned");
+            if (platform.transform.position.x < player.transform.position.x - cleanupDistance)
+            {
+                pool.ReturnPlatform(platform);
+                activePlatforms.Dequeue();
+            }
+            else
+            {
+                break;
+            }
         }
     }
-
-    // void OnDrawGizmos()
-    // {
-    //     if(!Application.isPlaying) return;
-
-    //     Gizmos.color = Color.red;
-    //     Gizmos.DrawLine(startPoint.position, 
-    //         startPoint.position + Vector3.right * player.MaxJumpDistance(player.PlayerVelocityX));
-    // }
-    // void SpawnPlatform(Vector3 position)
-    // {
-    //     Instantiate(platformPrefab, position, Quaternion.identity);
-    // }
 }
