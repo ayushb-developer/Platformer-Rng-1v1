@@ -201,4 +201,20 @@ public class LevelGenerator : MonoBehaviour
         currentPattern = (PatternStyle)Random.Range(0, 5);
         patternRemaining = Random.Range(2, 5);
     }
+
+#if UNITY_EDITOR
+    void OnGUI()
+    {
+        if (!Application.isPlaying) return;
+
+        GUIStyle style = new GUIStyle(GUI.skin.box);
+        style.fontSize = 28;
+        style.alignment = TextAnchor.MiddleCenter;
+        style.padding = new RectOffset(10, 10, 10, 10);
+
+        GUILayout.BeginArea(new Rect(10, 10, 260, 60));
+        GUILayout.Box($"Difficulty: {Difficulty:F2}", style, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+        GUILayout.EndArea();
+    }
+#endif
 }
