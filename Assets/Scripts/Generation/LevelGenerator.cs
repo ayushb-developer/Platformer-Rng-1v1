@@ -1,6 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+enum PatternStyle
+{
+    Random,
+    Flat,
+    StairsUp,
+    StairsDown,
+    WideGap
+}
+
 public class LevelGenerator : MonoBehaviour
 {
     [Header("References")]
@@ -26,10 +35,13 @@ public class LevelGenerator : MonoBehaviour
     float lastPlatformEndX;
     int platformsSpawned = 0;
     bool finishSpawned = false;
+    
 
     Queue<GameObject> activePlatforms = new();
-
     float SafeGap => player.MaxJumpDistance * settings.gapMultiplier;
+
+    PatternStyle currentPattern = PatternStyle.Random;
+    int patternRemaining = 0;
 
     void Start()
     {
@@ -61,6 +73,13 @@ public class LevelGenerator : MonoBehaviour
 
     void SpawnNextPlatform()
     {
+        if (patternRemaining <= 0)
+        {
+            PickPattern();
+        }
+
+        patternRemaining--;
+
         if (platformsSpawned >= settings.platformCount-1)
         {
             SpawnFinishPlatform();
@@ -68,27 +87,43 @@ public class LevelGenerator : MonoBehaviour
         }
 
         float maxGap = Mathf.Lerp(
-            SafeGap * difficultySettings.gapMultiplierAtMinDifficulty,
+        SafeGap * difficultySettings.gapMultiplierAtMinDifficulty,
             SafeGap,
             Difficulty
             );
+
         float gap = Random.Range(settings.minGap, maxGap);
+
+        if (currentPattern == PatternStyle.WideGap)
+        {
+            gap = Mathf.Lerp(maxGap * 0.7f, maxGap, Random.value);
+        }
 
         float heightRange = Mathf.Lerp(
             settings.maxHeightChange * difficultySettings.heightMultiplierAtMinDifficulty,
             settings.maxHeightChange,
             Difficulty
         );
-
-        float heightOffset = Random.Range(-heightRange, heightRange);
+        var heightOffset = currentPattern switch
+        {
+            PatternStyle.Flat => 0f,
+            PatternStyle.StairsUp => heightRange * 0.5f,
+            PatternStyle.StairsDown => -heightRange * 0.5f,
+            _ => Random.Range(-heightRange, heightRange),
+        };
         GameObject newPlatform = pool.GetPlatform();
-        BoxCollider2D collider = newPlatform.GetComponent<BoxCollider2D>();
+        float lengthScale = Random.Range(settings.minPlatformLengthScale, settings.maxPlatformLengthScale);
+        newPlatform.transform.localScale = new Vector3(lengthScale, 1f, 1f);
 
-        float halfWidth = collider.bounds.extents.x;
+        // BoxCollider2D collider = newPlatform.GetComponent<BoxCollider2D>();
+        // float halfWidth = collider.bounds.extents.x;
+
+        float halfWidth = lengthScale * 0.5f;
 
         float spawnX = lastPlatformEndX + gap + halfWidth;
         float spawnY = lastPlatformY + heightOffset;
         float maxSafeJumpHeight = player.Settings.jumpHeight * 0.8f;
+        heightOffset = Mathf.Lerp(0, heightOffset, 0.6f); // terrain smoothingt to avoid spikes
         spawnY = Mathf.Clamp(
             spawnY,
             lastPlatformY - maxSafeJumpHeight,
@@ -132,6 +167,7 @@ public class LevelGenerator : MonoBehaviour
             if (platform.transform.position.x < player.transform.position.x - settings.cleanupDistance)
             {
                 pool.ReturnPlatform(platform);
+                platform.transform.localScale = Vector3.one;
                 activePlatforms.Dequeue();
             }
             else
@@ -139,5 +175,12 @@ public class LevelGenerator : MonoBehaviour
                 break;
             }
         }
+    }
+
+
+    void PickPattern()
+    {
+        currentPattern = (PatternStyle)Random.Range(0, 5);
+        patternRemaining = Random.Range(2, 5);
     }
 }

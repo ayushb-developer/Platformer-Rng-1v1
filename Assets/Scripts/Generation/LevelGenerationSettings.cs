@@ -14,4 +14,8 @@ public class LevelGenerationSettings : ScriptableObject
 
     [Header("Height")]
     public float maxHeightChange = 2f;
+
+    [Header("Platform Length")]
+    public float minPlatformLengthScale = 0.8f;
+    public float maxPlatformLengthScale = 1.6f;
 }

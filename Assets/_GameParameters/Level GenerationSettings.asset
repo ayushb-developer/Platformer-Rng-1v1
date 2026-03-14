@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelGenerationSettings
   spawnDistance: 30
   cleanupDistance: 20
-  platformCount: 6
+  platformCount: 12
   minGap: 2
   gapMultiplier: 0.8
   maxHeightChange: 2
+  minPlatformLengthScale: 5
+  maxPlatformLengthScale: 16
