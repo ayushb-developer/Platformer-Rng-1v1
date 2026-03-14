@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ public class PlayerController : MonoBehaviour
     public PlayerSettings Settings => settings;
     Rigidbody2D rb;
     bool grounded;
+    bool canMove = true;
 
     void Awake()
     {
@@ -35,6 +37,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (!canMove) return;
+
         grounded = Physics2D.OverlapCircle(
             groundCheck.position,
             0.2f,
@@ -51,6 +55,8 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (!canMove) return;
+
         float targetVelocity = input.MoveInput.x *settings.baseSpeed;
         float newX = Mathf.Lerp(PlayerVelocityX, targetVelocity, 10f * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
@@ -61,7 +67,6 @@ public class PlayerController : MonoBehaviour
     //     return horizontalSpeed * (timeToApex * 2);
     // }
 
-
     void OnDrawGizmos()
     {
         if(!Application.isPlaying) return;
@@ -71,4 +76,23 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawLine(transform.position,
         transform.position + Vector3.right * MaxJumpDistance);
     }
+
+public void OnReachedFinish()
+{
+    Debug.Log(name + " finished!");
+    // if(finished)
+    //     return;
+
+    // finished = true; TODO: add a finished variable to prevent multiple calls, or mark 1st and 2nd place
+
+    StopMovement();
+}
+
+
+public void StopMovement()
+{
+    canMove = false;
+
+    rb.linearVelocity = Vector2.zero;
+}
 }
