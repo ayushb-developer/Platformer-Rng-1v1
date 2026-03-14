@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0654a4c41e0b18646a7a6d0cd77385a7, type: 3}
+  m_Name: Obstacle Settings
+  m_EditorClassIdentifier: Assembly-CSharp::ObstacleSettings
+  platformObstacles:
+  - {fileID: 2817771991573307585, guid: 7e98241433c07dd4d99a991cb94392ef, type: 3}
+  basePlatformChance: 0.25
+  maxPlatformChance: 0.6
+  flyingEnemies:
+  - {fileID: 6286213567440602382, guid: 9e6d157a21dad534dbfd328a0dc179cd, type: 3}
+  baseEnemyChance: 0.15
+  maxEnemyChance: 0.4
+  minEdgeOffset: 0.6
+  enemyHeightOffset: 2

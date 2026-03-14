@@ -21,7 +21,7 @@ public class LevelGenerator : MonoBehaviour
     [Header("Settings")]
     [SerializeField] LevelGenerationSettings settings;
     [SerializeField] DifficultySettings difficultySettings;
-
+    [SerializeField] ObstacleSettings obstacleSettings;
     Queue<GameObject> activePlatforms = new();
 
     float lastPlatformY;
@@ -110,7 +110,8 @@ public class LevelGenerator : MonoBehaviour
         lastPlatformY = spawnY;
 
         platformsSpawned++;
-
+        TrySpawnPlatformObstacle(platform, halfWidth);
+        TrySpawnFlyingEnemy(lastPlatformEndX - gap - lengthScale, spawnX - halfWidth);
         Debug.Log($"Spawned Platform {platformsSpawned} | X:{spawnX:F2} Y:{spawnY:F2} Gap:{gap:F2}");
     }
 
@@ -201,6 +202,61 @@ public class LevelGenerator : MonoBehaviour
         currentPattern = (PatternStyle)Random.Range(0, 5);
         patternRemaining = Random.Range(2, 5);
     }
+
+void TrySpawnPlatformObstacle(GameObject platform, float halfWidth)
+{
+    float chance = Mathf.Lerp(
+        obstacleSettings.basePlatformChance,
+        obstacleSettings.maxPlatformChance,
+        Difficulty
+    );
+
+    if (Random.value > chance) return;
+
+    GameObject prefab = obstacleSettings.platformObstacles[
+        Random.Range(0, obstacleSettings.platformObstacles.Length)
+    ];
+
+    GameObject obstacle = Instantiate(prefab);
+
+    float minX = -halfWidth + obstacleSettings.minEdgeOffset;
+    float maxX = halfWidth - obstacleSettings.minEdgeOffset;
+
+    float localX = Random.Range(minX, maxX);
+
+    obstacle.transform.SetParent(platform.transform);
+
+    obstacle.transform.localPosition = new Vector3(localX, 0.5f, 0);
+}
+
+void TrySpawnFlyingEnemy(float previousPlatformEnd, float newPlatformStart)
+{
+    float chance = Mathf.Lerp(
+        obstacleSettings.baseEnemyChance,
+        obstacleSettings.maxEnemyChance,
+        Difficulty
+    );
+
+    if (Random.value > chance) return;
+
+    GameObject prefab = obstacleSettings.flyingEnemies[
+        Random.Range(0, obstacleSettings.flyingEnemies.Length)
+    ];
+
+    float centerX = (previousPlatformEnd + newPlatformStart) * 0.5f;
+
+    float enemyY = lastPlatformY + obstacleSettings.enemyHeightOffset;
+
+    GameObject enemy = Instantiate(
+        prefab,
+        new Vector3(centerX, enemyY, 0),
+        Quaternion.identity
+    );
+
+    FlyingObstacle script = enemy.GetComponent<FlyingObstacle>();
+
+    script.SetPatrolRange(previousPlatformEnd, newPlatformStart);
+}
 
 #if UNITY_EDITOR
     void OnGUI()

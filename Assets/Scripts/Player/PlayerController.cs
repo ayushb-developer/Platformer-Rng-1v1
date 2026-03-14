@@ -86,22 +86,28 @@ public class PlayerController : MonoBehaviour
         transform.position + Vector3.right * MaxJumpDistance);
     }
 
-public void OnReachedFinish()
-{
-    Debug.Log(name + " finished!");
-    // if(finished)
-    //     return;
+    public void OnReachedFinish()
+    {
+        Debug.Log(name + " finished!");
+        // if(finished)
+        //     return;
 
-    // finished = true; TODO: add a finished variable to prevent multiple calls, or mark 1st and 2nd place
+        // finished = true; TODO: add a finished variable to prevent multiple calls, or mark 1st and 2nd place
 
-    StopMovement();
-}
+        StopMovement();
+    }
 
 
-public void StopMovement()
-{
-    canMove = false;
+    public void StopMovement()
+    {
+        canMove = false;
 
-    rb.linearVelocity = Vector2.zero;
-}
+        rb.linearVelocity = Vector2.zero;
+    }
+
+    public void OnHitObstacle()
+    {
+        Debug.Log(name + " hit an obstacle!");
+        StopMovement();
+    }
 }
