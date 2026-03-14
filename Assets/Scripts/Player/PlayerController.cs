@@ -40,6 +40,15 @@ public class PlayerController : MonoBehaviour
 
         rb.gravityScale = gravity / -Physics2D.gravity.y;
     }
+    void OnEnable()
+    {
+        GameFlow.Instance.OnStateChanged += HandleGameState;
+    }
+
+    void OnDisable()
+    {
+        GameFlow.Instance.OnStateChanged -= HandleGameState;
+    }
 
     void Update()
     {
@@ -98,13 +107,7 @@ public class PlayerController : MonoBehaviour
 
     public void OnReachedFinish()
     {
-        Debug.Log(name + " finished!");
-        // if(finished)
-        //     return;
-
-        // finished = true; TODO: add a finished variable to prevent multiple calls, or mark 1st and 2nd place
-
-        StopMovement();
+        GameFlow.Instance.FinishGame();
     }
 
 
@@ -117,7 +120,25 @@ public class PlayerController : MonoBehaviour
 
     public void OnHitObstacle()
     {
-        Debug.Log(name + " hit an obstacle!");
-        StopMovement();
+        GameFlow.Instance.FinishGame();
     }
+
+        void HandleGameState(GameState state)
+    {
+        switch (state)
+        {
+            case GameState.WaitingToStart:
+                canMove = false;
+                break;
+
+            case GameState.Playing:
+                canMove = true;
+                break;
+
+            case GameState.Finished:
+                StopMovement();
+                break;
+        }
+    }
+
 }

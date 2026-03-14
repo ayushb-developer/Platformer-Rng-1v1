@@ -33,6 +33,7 @@ public class LevelGenerator : MonoBehaviour
     int patternRemaining;
 
     float SafeGap => player.MaxJumpDistance * settings.gapMultiplier;
+    bool running; // controlled by GameFlow
 
     // Difficulty value (0–1) based on distance travelled
     public float Difficulty
@@ -48,6 +49,20 @@ public class LevelGenerator : MonoBehaviour
     void Start()
     {
         InitializeFirstPlatform();
+    }
+    void OnEnable()
+    {
+        GameFlow.Instance.OnStateChanged += HandleState;
+    }
+
+    void OnDisable()
+    {
+        GameFlow.Instance.OnStateChanged -= HandleState;
+    }
+
+    void HandleState(GameState state)
+    {
+        running = state == GameState.Playing;
     }
 
     void InitializeFirstPlatform()
@@ -66,6 +81,8 @@ public class LevelGenerator : MonoBehaviour
 
     void Update()
     {
+        if (!running) return;
+        
         while (lastPlatformEndX < player.transform.position.x + settings.spawnDistance && !finishSpawned)
         {
             SpawnNextPlatform();
