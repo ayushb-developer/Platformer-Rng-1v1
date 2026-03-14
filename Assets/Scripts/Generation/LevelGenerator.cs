@@ -112,7 +112,7 @@ public class LevelGenerator : MonoBehaviour
         platformsSpawned++;
         TrySpawnPlatformObstacle(platform, halfWidth);
         TrySpawnFlyingEnemy(lastPlatformEndX - gap - lengthScale, spawnX - halfWidth);
-        Debug.Log($"Spawned Platform {platformsSpawned} | X:{spawnX:F2} Y:{spawnY:F2} Gap:{gap:F2}");
+//        Debug.Log($"Spawned Platform {platformsSpawned} | X:{spawnX:F2} Y:{spawnY:F2} Gap:{gap:F2}");
     }
 
     float GenerateGap()
@@ -222,11 +222,12 @@ void TrySpawnPlatformObstacle(GameObject platform, float halfWidth)
     float minX = -halfWidth + obstacleSettings.minEdgeOffset;
     float maxX = halfWidth - obstacleSettings.minEdgeOffset;
 
-    float localX = Random.Range(minX, maxX);
-
     obstacle.transform.SetParent(platform.transform);
+    float localX = Random.Range(minX, maxX)/ platform.transform.localScale.x; // adjust for platform scale
+
 
     obstacle.transform.localPosition = new Vector3(localX, 0.5f, 0);
+    obstacle.GetComponent<Obstacle>().Initialize(player.transform, settings.cleanupDistance);
 }
 
 void TrySpawnFlyingEnemy(float previousPlatformEnd, float newPlatformStart)
@@ -255,6 +256,7 @@ void TrySpawnFlyingEnemy(float previousPlatformEnd, float newPlatformStart)
 
     FlyingObstacle script = enemy.GetComponent<FlyingObstacle>();
 
+    script.Initialize(player.transform, obstacleSettings.enemyCleanupDistance);
     script.SetPatrolRange(previousPlatformEnd, newPlatformStart);
 }
 

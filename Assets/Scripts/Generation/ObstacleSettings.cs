@@ -16,4 +16,5 @@ public class ObstacleSettings : ScriptableObject
     [Header("Placement")]
     public float minEdgeOffset = 0.6f;
     public float enemyHeightOffset = 2f;
+    public float enemyCleanupDistance = 40f;
 }

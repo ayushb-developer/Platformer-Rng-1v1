@@ -9,13 +9,19 @@ public class FlyingObstacle : Obstacle
 
     bool movingRight = true;
 
+    protected override void Update()
+    {
+        base.Update();   // run cleanup
+        Patrol();
+    }
+
     public void SetPatrolRange(float left, float right)
     {
         leftLimit = left;
         rightLimit = right;
     }
 
-    void Update()
+    void Patrol()
     {
         float dir = movingRight ? 1 : -1;
 

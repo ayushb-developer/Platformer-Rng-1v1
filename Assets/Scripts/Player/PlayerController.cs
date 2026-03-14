@@ -1,6 +1,9 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEngine.InputSystem;
+#endif
 
 [RequireComponent(typeof(InputHandler))]
 [RequireComponent(typeof(Rigidbody2D))]
@@ -55,18 +58,25 @@ public class PlayerController : MonoBehaviour
             input.ResetJump();
             // Debug.Log("Max Jump Distance: " + MaxJumpDistance(PlayerVelocityX));
         }
+#if UNITY_EDITOR
+    if (Keyboard.current.rKey.wasPressedThisFrame)
+    {
+        transform.position = new Vector3(transform.position.x, 2, transform.position.z);
+        rb.linearVelocity = Vector2.zero;
+    }
+#endif
     }
 
     void FixedUpdate()
     {
         if (!canMove) return;
 
-        float targetVelocity = input.MoveInput.x *settings.baseSpeed;
+        float targetVelocity;// = input.MoveInput.x *settings.baseSpeed;
         targetVelocity = Mathf.Lerp(
             settings.baseSpeed,
             settings.maxSpeed,
             levelGenerator.Difficulty * difficultySettings.maxSpeedMultiplier
-        );
+        ) * input.MoveInput.x;
         float newX = Mathf.Lerp(PlayerVelocityX, targetVelocity, 10f * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
     }
