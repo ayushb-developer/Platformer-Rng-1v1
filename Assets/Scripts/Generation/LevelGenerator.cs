@@ -10,7 +10,18 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] GameObject finishPlatformPrefab;
 
     [SerializeField] LevelGenerationSettings settings;
-    
+    [SerializeField] DifficultySettings difficultySettings;
+    public float Difficulty
+    {
+        get
+        {
+            float distance = player.transform.position.x;
+
+            float normalized = distance / difficultySettings.difficultyRampDistance;
+
+            return difficultySettings.difficultyCurve.Evaluate(normalized);
+        }
+    }
     float lastPlatformY;
     float lastPlatformEndX;
     int platformsSpawned = 0;
@@ -55,9 +66,21 @@ public class LevelGenerator : MonoBehaviour
             SpawnFinishPlatform();
             return;
         }
-        float gap = Random.Range(settings.minGap, SafeGap);
-        float heightOffset = Random.Range(-settings.maxHeightChange, settings.maxHeightChange);
-        
+
+        float maxGap = Mathf.Lerp(
+            SafeGap * difficultySettings.gapMultiplierAtMinDifficulty,
+            SafeGap,
+            Difficulty
+            );
+        float gap = Random.Range(settings.minGap, maxGap);
+
+        float heightRange = Mathf.Lerp(
+            settings.maxHeightChange * difficultySettings.heightMultiplierAtMinDifficulty,
+            settings.maxHeightChange,
+            Difficulty
+        );
+
+        float heightOffset = Random.Range(-heightRange, heightRange);
         GameObject newPlatform = pool.GetPlatform();
         BoxCollider2D collider = newPlatform.GetComponent<BoxCollider2D>();
 
@@ -65,6 +88,12 @@ public class LevelGenerator : MonoBehaviour
 
         float spawnX = lastPlatformEndX + gap + halfWidth;
         float spawnY = lastPlatformY + heightOffset;
+        float maxSafeJumpHeight = player.Settings.jumpHeight * 0.8f;
+        spawnY = Mathf.Clamp(
+            spawnY,
+            lastPlatformY - maxSafeJumpHeight,
+            lastPlatformY + maxSafeJumpHeight
+        );
 
         newPlatform.transform.position = new Vector3(spawnX, spawnY, 0);
         activePlatforms.Enqueue(newPlatform);

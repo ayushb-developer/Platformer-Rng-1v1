@@ -123,6 +123,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   settings: {fileID: 11400000, guid: 637b37dfb6023f046841efea4e6d251a, type: 2}
+  difficultySettings: {fileID: 11400000, guid: 5d794914886f8ea4e98af7248a74b622, type: 2}
   groundCheck: {fileID: 3211994176797617823}
   groundLayer:
     serializedVersion: 2

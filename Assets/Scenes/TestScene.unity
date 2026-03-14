@@ -504,6 +504,7 @@ MonoBehaviour:
   pool: {fileID: 199188527}
   finishPlatformPrefab: {fileID: 8128831915014167337, guid: 889de92bbdb0a2145bd4b3e85d882172, type: 3}
   settings: {fileID: 11400000, guid: dadbd63025d0a314c8faa24361701a4b, type: 2}
+  difficultySettings: {fileID: 11400000, guid: 5d794914886f8ea4e98af7248a74b622, type: 2}
 --- !u!4 &1566522957
 Transform:
   m_ObjectHideFlags: 0

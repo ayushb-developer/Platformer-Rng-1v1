@@ -7,6 +7,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] PlayerSettings settings;
+    [SerializeField] DifficultySettings difficultySettings;
     [SerializeField] Transform groundCheck;
     [SerializeField] LayerMask groundLayer;
 
@@ -18,6 +19,7 @@ public class PlayerController : MonoBehaviour
     public float MaxJumpDistance => settings.baseSpeed * settings.timeToApex * 2;
     public PlayerSettings Settings => settings;
     Rigidbody2D rb;
+    private LevelGenerator levelGenerator;
     bool grounded;
     bool canMove = true;
 
@@ -25,6 +27,7 @@ public class PlayerController : MonoBehaviour
     {
         input = GetComponent<InputHandler>();
         rb = GetComponent<Rigidbody2D>();
+        levelGenerator = FindFirstObjectByType<LevelGenerator>();
     }
 
     void Start()
@@ -45,6 +48,7 @@ public class PlayerController : MonoBehaviour
             groundLayer
         );
 
+
         if (input.JumpPressed && grounded)
         {
             rb.linearVelocity = new Vector2(PlayerVelocityX, jumpVelocity);
@@ -58,6 +62,11 @@ public class PlayerController : MonoBehaviour
         if (!canMove) return;
 
         float targetVelocity = input.MoveInput.x *settings.baseSpeed;
+        targetVelocity = Mathf.Lerp(
+            settings.baseSpeed,
+            settings.maxSpeed,
+            levelGenerator.Difficulty * difficultySettings.maxSpeedMultiplier
+        );
         float newX = Mathf.Lerp(PlayerVelocityX, targetVelocity, 10f * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
     }
