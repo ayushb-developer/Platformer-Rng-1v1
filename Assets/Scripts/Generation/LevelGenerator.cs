@@ -197,11 +197,19 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    void PickPattern()
+void PickPattern()
+{
+    PatternStyle next;
+
+    do
     {
-        currentPattern = (PatternStyle)Random.Range(0, 5);
-        patternRemaining = Random.Range(2, 5);
+        next = (PatternStyle)Random.Range(0, 5);
     }
+    while (next == PatternStyle.WideGap && currentPattern == PatternStyle.WideGap);
+
+    currentPattern = next;
+    patternRemaining = Random.Range(2,5);
+}
 
 void TrySpawnPlatformObstacle(GameObject platform, float halfWidth)
 {

@@ -33,4 +33,14 @@ public class FlyingObstacle : Obstacle
         if (transform.position.x < leftLimit)
             movingRight = true;
     }
+
+    void OnDrawGizmos()
+{
+    Gizmos.color = Color.red;
+    Gizmos.DrawLine(
+        new Vector3(leftLimit, transform.position.y),
+        new Vector3(rightLimit, transform.position.y)
+    );
+}
+
 }

@@ -19,7 +19,7 @@ public class PlayerController : MonoBehaviour
     float jumpVelocity;
 
     public float PlayerVelocityX => rb.linearVelocity.x;
-    public float MaxJumpDistance => settings.baseSpeed * settings.timeToApex * 2;
+    public float MaxJumpDistance => PlayerVelocityX * settings.timeToApex * 2;
     public PlayerSettings Settings => settings;
     Rigidbody2D rb;
     private LevelGenerator levelGenerator;
