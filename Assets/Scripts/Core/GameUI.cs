@@ -1,10 +1,22 @@
+using System;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameUI : MonoBehaviour
 {
     [SerializeField] GameObject startScreen;
     [SerializeField] GameObject gameOverScreen;
     [SerializeField] GameObject resultsScreen;
+
+    [SerializeField] TMPro.TextMeshProUGUI timeText;
+    [SerializeField] Button restartButton;
+
+    void Start()
+    {
+        restartButton.onClick.AddListener(() => GameFlow.Instance.Restart());
+    } 
     void OnEnable()
     {
         GameFlow.Instance.OnStateChanged += UpdateUI;
