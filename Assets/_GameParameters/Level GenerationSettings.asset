@@ -18,5 +18,5 @@ MonoBehaviour:
   minGap: 2
   gapMultiplier: 0.8
   maxHeightChange: 2
-  minPlatformLengthScale: 5
-  maxPlatformLengthScale: 16
+  minPlatformLengthScale: 4
+  maxPlatformLengthScale: 8
