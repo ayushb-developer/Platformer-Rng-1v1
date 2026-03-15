@@ -4,9 +4,8 @@ public class FinishTrigger : MonoBehaviour
 {
     void OnTriggerEnter2D(Collider2D other)
     {
-        PlayerController player = other.GetComponent<PlayerController>();
-
-        if(player == null)
+        
+        if(!other.TryGetComponent<PlayerController>(out var player))
             return;
 
         player.OnReachedFinish();

@@ -12,8 +12,7 @@ public class Obstacle : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D col)
     {
-        PlayerController player = col.collider.GetComponent<PlayerController>();
-        if (player == null) return;
+        if (!col.collider.TryGetComponent<PlayerController>(out var player)) return;
 
         Debug.Log("Player hit obstacle");
         player.OnHitObstacle();
