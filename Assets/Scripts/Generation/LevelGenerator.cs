@@ -123,6 +123,8 @@ public class LevelGenerator : MonoBehaviour
         platform.transform.position = new Vector3(spawnX, spawnY, 0);
         activePlatforms.Enqueue(platform);
 
+        platform.GetComponent<Platform>().SetVisual();
+
         lastPlatformEndX = spawnX + halfWidth;
         lastPlatformY = spawnY;
 
