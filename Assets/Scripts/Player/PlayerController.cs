@@ -1,13 +1,13 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using Unity.Netcode;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem;
 #endif
 
 [RequireComponent(typeof(InputHandler))]
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerController : MonoBehaviour
 public class PlayerController : NetworkBehaviour
 {
     [SerializeField] PlayerSettings settings;
@@ -21,7 +21,11 @@ public class PlayerController : NetworkBehaviour
 
     public float PlayerVelocityX => rb.linearVelocity.x;
     public float MaxJumpDistance => PlayerVelocityX * settings.timeToApex * 2;
+
     public PlayerSettings Settings => settings;
+
+    // public Vector3 Position => transform.position;
+
     Rigidbody2D rb;
     private LevelGenerator levelGenerator;
     bool grounded;
@@ -110,9 +114,9 @@ public class PlayerController : NetworkBehaviour
 
     public void OnReachedFinish()
     {
+        Debug.Log("Reached Finish!");
         GameFlow.Instance.FinishGame();
     }
-
 
     public void StopMovement()
     {
@@ -123,6 +127,7 @@ public class PlayerController : NetworkBehaviour
 
     public void OnHitObstacle()
     {
+        Debug.Log("Hit Obstacle! Game Over.");
         GameFlow.Instance.FinishGame();
     }
 
