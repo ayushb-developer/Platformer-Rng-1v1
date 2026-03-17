@@ -8,6 +8,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(InputHandler))]
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
+public class PlayerController : NetworkBehaviour
 {
     [SerializeField] PlayerSettings settings;
     [SerializeField] DifficultySettings difficultySettings;
@@ -52,6 +53,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if(!IsOwner) return;
         if (!canMove) return;
 
         grounded = Physics2D.OverlapCircle(
@@ -78,6 +80,7 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if(!IsOwner) return;
         if (!canMove) return;
 
         float targetVelocity;// = input.MoveInput.x *settings.baseSpeed;
