@@ -149,4 +149,12 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    public override void OnNetworkSpawn()
+    {
+        if (IsOwner)
+        {
+            CameraFollow cam = FindFirstObjectByType<CameraFollow>();
+            cam.SetTarget(transform);
+        }
+    }
 }
