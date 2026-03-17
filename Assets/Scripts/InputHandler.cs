@@ -1,10 +1,15 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class InputHandler : MonoBehaviour
+public class InputHandler : NetworkBehaviour
 {
     public Vector2 MoveInput { get; private set; }
     public bool JumpPressed { get; private set; }
+
+    System.Action<InputAction.CallbackContext> moveHandler;
+    System.Action<InputAction.CallbackContext> jumpHandler;
+    System.Action<InputAction.CallbackContext> touchStartHandler;
 
     PlayerInputActions inputActions;
 
@@ -16,27 +21,31 @@ public class InputHandler : MonoBehaviour
         inputActions = new PlayerInputActions();
     }
 
-    void OnEnable()
+    public override void OnNetworkSpawn()
     {
+        if (!IsOwner) return;
+
         inputActions.Enable();
 
-        inputActions.Player.Move.performed += ctx =>
-            MoveInput = ctx.ReadValue<Vector2>();
+        moveHandler = ctx => MoveInput = ctx.ReadValue<Vector2>();
+        jumpHandler = ctx => JumpPressed = true;
+        touchStartHandler = ctx => startTouch = inputActions.Player.TouchPosition.ReadValue<Vector2>();
 
-        // inputActions.Player.Move.canceled += ctx =>
-        //     MoveInput = Vector2.zero;
-
-        inputActions.Player.Jump.performed += ctx =>
-            JumpPressed = true;
-
-        inputActions.Player.TouchPress.started += ctx =>
-            startTouch = inputActions.Player.TouchPosition.ReadValue<Vector2>();
-
+        inputActions.Player.Move.performed += moveHandler;
+        inputActions.Player.Jump.performed += jumpHandler;
+        inputActions.Player.TouchPress.started += touchStartHandler;
         inputActions.Player.TouchPress.canceled += OnTouchReleased;
     }
 
-    void OnDisable()
+    public override void OnNetworkDespawn()
     {
+        if (!IsOwner) return;
+
+        inputActions.Player.Move.performed -= moveHandler;
+        inputActions.Player.Jump.performed -= jumpHandler;
+        inputActions.Player.TouchPress.started -= touchStartHandler;
+        inputActions.Player.TouchPress.canceled -= OnTouchReleased;
+
         inputActions.Disable();
     }
 

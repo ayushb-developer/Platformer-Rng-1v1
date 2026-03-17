@@ -28,18 +28,53 @@ public class PlayerController : NetworkBehaviour
 
     Rigidbody2D rb;
     private LevelGenerator levelGenerator;
+    // private LevelGenerator levelGenerator;
     bool grounded;
-    bool canMove = true;
+    bool canMove = false;
 
     void Awake()
     {
         input = GetComponent<InputHandler>();
         rb = GetComponent<Rigidbody2D>();
-        levelGenerator = FindFirstObjectByType<LevelGenerator>();
+        // levelGenerator = FindFirstObjectByType<LevelGenerator>();
     }
 
     void Start()
     {
+        if(GameFlow.Instance.State == GameState.WaitingForPlayers || GameFlow.Instance.State == GameState.WaitingToStart)
+        {
+            Initialize();
+        }
+        // else if(GameFlow.Instance.State == GameState.Playing)
+        // {
+        //     StartPlayer();
+        // }       
+    }
+
+    private void Initialize()
+    {
+        Debug.Log("Initializing Player");
+        canMove = false;
+        playerSprite.enabled = false;
+        transform.position = new (0, 3, 0);
+        rb.gravityScale = 0;
+
+        if(IsOwner)
+        {
+            playerSprite.color = Color.blue;
+        }
+        else
+        {
+            playerSprite.color = Color.orange;
+        }
+    }
+
+    private void StartPlayer()
+    {
+        Debug.Log("Starting Player");
+        canMove = true;
+        playerSprite.enabled = true;
+
         gravity = 2 * settings.jumpHeight / Mathf.Pow(settings.timeToApex, 2);
         jumpVelocity = gravity * settings.timeToApex;
 
@@ -74,11 +109,11 @@ public class PlayerController : NetworkBehaviour
             // Debug.Log("Max Jump Distance: " + MaxJumpDistance(PlayerVelocityX));
         }
 #if UNITY_EDITOR
-    if (Keyboard.current.rKey.wasPressedThisFrame)
-    {
-        transform.position = new Vector3(transform.position.x, 2, transform.position.z);
-        rb.linearVelocity = Vector2.zero;
-    }
+        if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            transform.position = new Vector3(transform.position.x, 2, transform.position.z);
+            rb.linearVelocity = Vector2.zero;
+        }
 #endif
     }
 
@@ -91,7 +126,7 @@ public class PlayerController : NetworkBehaviour
         targetVelocity = Mathf.Lerp(
             settings.baseSpeed,
             settings.maxSpeed,
-            levelGenerator.Difficulty * difficultySettings.maxSpeedMultiplier
+            GetLocalDifficulty() * difficultySettings.maxSpeedMultiplier
         ) * input.MoveInput.x;
         float newX = Mathf.Lerp(PlayerVelocityX, targetVelocity, 10f * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(newX, rb.linearVelocity.y);
@@ -132,15 +167,16 @@ public class PlayerController : NetworkBehaviour
     }
 
         void HandleGameState(GameState state)
+    void HandleGameState(GameState state)
     {
         switch (state)
         {
             case GameState.WaitingToStart:
-                canMove = false;
+                Initialize();
                 break;
 
             case GameState.Playing:
-                canMove = true;
+                StartPlayer();
                 break;
 
             case GameState.Finished:
@@ -151,10 +187,21 @@ public class PlayerController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        rb.simulated = IsOwner;
+
         if (IsOwner)
         {
             CameraFollow cam = FindFirstObjectByType<CameraFollow>();
             cam.SetTarget(transform);
         }
+    }
+    
+    float GetLocalDifficulty() //so that each player can have their own difficulty based on how far they are in the level, not just one global difficulty
+    {
+        float distance = transform.position.x;
+
+        float normalized = distance / difficultySettings.difficultyRampDistance;
+
+        return difficultySettings.difficultyCurve.Evaluate(normalized);
     }
 }

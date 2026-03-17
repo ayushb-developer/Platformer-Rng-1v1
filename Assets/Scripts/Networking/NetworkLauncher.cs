@@ -13,13 +13,16 @@ public class NetworkLauncher : MonoBehaviour
         hostButton.onClick.AddListener(Host);
         joinButton.onClick.AddListener(Client);
     }
-    void OnEnable()
+    void Start()
     {
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
     }
-    void OnDisable()
+    void OnDestroy()
     {
-        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        }
     }
 
     private void Host()
@@ -38,7 +41,7 @@ public class NetworkLauncher : MonoBehaviour
     {
         if (!NetworkManager.Singleton.IsServer) return;
 
-        GameObject player = Instantiate(playerPrefab);
-        player.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
+        // GameObject player = Instantiate(playerPrefab);
+        // player.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
     }
 }
