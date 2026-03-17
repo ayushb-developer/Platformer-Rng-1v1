@@ -3,6 +3,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "GameSettings/Level Generation Settings")]
 public class LevelGenerationSettings : ScriptableObject
 {
+    public GameObject platformPrefab;
     [Header("Platform Spawn")]
     public float spawnDistance = 30f;
     public float cleanupDistance = 20f;

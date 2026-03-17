@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 enum PatternStyle
@@ -10,11 +11,11 @@ enum PatternStyle
     WideGap
 }
 
-public class LevelGenerator : MonoBehaviour
+public class LevelGenerator : NetworkBehaviour
 {
     [Header("References")]
     [SerializeField] Transform startPoint;
-    [SerializeField] PlayerController player;
+    // [SerializeField] MonoBehaviour runTargetSource;
     [SerializeField] PlatformPool pool;
     [SerializeField] GameObject finishPlatformPrefab;
 
@@ -22,6 +23,8 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] LevelGenerationSettings settings;
     [SerializeField] DifficultySettings difficultySettings;
     [SerializeField] ObstacleSettings obstacleSettings;
+    
+    // PlayerController player;
     Queue<GameObject> activePlatforms = new();
 
     float lastPlatformY;
@@ -31,25 +34,61 @@ public class LevelGenerator : MonoBehaviour
 
     PatternStyle currentPattern = PatternStyle.Random;
     int patternRemaining;
+    PlayerController leadingPlayer;
 
-    float SafeGap => player.MaxJumpDistance * settings.gapMultiplier;
+    PlayerController GetLeadingPlayer()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None); // TODO: optimize by caching references if needed
+
+        PlayerController leader = null;
+        float maxX = float.MinValue;
+
+        foreach (var p in players)
+        {
+            if (!p.IsSpawned) continue;
+
+            float x = p.transform.position.x;
+
+            if (x > maxX)
+            {
+                maxX = x;
+                leader = p;
+            }
+        }
+
+        return leader;
+    }
+    float SafeGap => leadingPlayer.MaxJumpDistance * settings.gapMultiplier;
     bool running; // controlled by GameFlow
+
+    // IRunTarget runTarget;
+
 
     // Difficulty value (0–1) based on distance travelled
     public float Difficulty
     {
         get
         {
-            float distance = player.transform.position.x;
+            float distance = leadingPlayer.transform.position.x;
             float normalized = distance / difficultySettings.difficultyRampDistance;
             return difficultySettings.difficultyCurve.Evaluate(normalized);
         }
     }
 
-    void Start()
-    {
-        InitializeFirstPlatform();
-    }
+//     void Awake()
+// {
+//     runTarget = runTargetSource as IRunTarget;
+
+//     if (runTarget == null)
+//         Debug.LogError("RunTargetSource must implement IRunTarget");
+// }
+
+    // void Start()
+    // {
+    //     if(!IsServer) return; // only let the server handle generation
+    //     InitializeFirstPlatform();
+    // }
+
     void OnEnable()
     {
         GameFlow.Instance.OnStateChanged += HandleState;
@@ -63,13 +102,23 @@ public class LevelGenerator : MonoBehaviour
     void HandleState(GameState state)
     {
         running = state == GameState.Playing;
+        if (running && IsServer)
+        {
+            Debug.Log("Level Generator Starting");
+            InitializeFirstPlatform();
+        }    
     }
 
     void InitializeFirstPlatform()
     {
-        GameObject firstPlatform = pool.GetPlatform();
+        Debug.Log("Initialize First Platform");
+        // GameObject firstPlatform = pool.GetPlatform();
+        GameObject firstPlatform = Instantiate(settings.platformPrefab);
+        firstPlatform.GetComponent<NetworkObject>().Spawn();
         firstPlatform.transform.position = startPoint.position;
-
+        #if UNITY_EDITOR
+        firstPlatform.name = $"First Platform";
+        #endif
         activePlatforms.Enqueue(firstPlatform);
 
         BoxCollider2D collider = firstPlatform.GetComponent<BoxCollider2D>();
@@ -81,9 +130,13 @@ public class LevelGenerator : MonoBehaviour
 
     void Update()
     {
+        if (!IsServer) return; 
         if (!running) return;
         
-        while (lastPlatformEndX < player.transform.position.x + settings.spawnDistance && !finishSpawned)
+        leadingPlayer = GetLeadingPlayer();
+        if (leadingPlayer == null) return;
+
+        while (lastPlatformEndX < leadingPlayer.transform.position.x + settings.spawnDistance && !finishSpawned)
         {
             SpawnNextPlatform();
         }
@@ -112,7 +165,12 @@ public class LevelGenerator : MonoBehaviour
 
         float spawnY = CalculateSafeHeight(heightOffset);
 
-        GameObject platform = pool.GetPlatform();
+        // GameObject platform = pool.GetPlatform();
+        GameObject platform = Instantiate(settings.platformPrefab);
+
+        #if UNITY_EDITOR
+        platform.name = $"Platform {platformsSpawned}";
+        #endif
 
         float lengthScale = Random.Range(settings.minPlatformLengthScale, settings.maxPlatformLengthScale);
         platform.transform.localScale = new Vector3(lengthScale, 1f, 1f);
@@ -124,6 +182,7 @@ public class LevelGenerator : MonoBehaviour
         activePlatforms.Enqueue(platform);
 
         platform.GetComponent<Platform>().SetVisual();
+        platform.GetComponent<NetworkObject>().Spawn();
 
         lastPlatformEndX = spawnX + halfWidth;
         lastPlatformY = spawnY;
@@ -169,7 +228,7 @@ public class LevelGenerator : MonoBehaviour
 
     float CalculateSafeHeight(float heightOffset)
     {
-        float maxJumpHeight = player.Settings.jumpHeight * 0.8f;
+        float maxJumpHeight = leadingPlayer.Settings.jumpHeight * 0.8f;
 
         float spawnY = lastPlatformY + heightOffset;
 
@@ -183,6 +242,7 @@ public class LevelGenerator : MonoBehaviour
     void SpawnFinishPlatform()
     {
         GameObject finish = Instantiate(finishPlatformPrefab);
+        finish.GetComponent<NetworkObject>().Spawn();
 
         BoxCollider2D collider = finish.GetComponent<BoxCollider2D>();
         float halfWidth = collider.bounds.extents.x;
@@ -203,9 +263,13 @@ public class LevelGenerator : MonoBehaviour
         {
             GameObject platform = activePlatforms.Peek();
 
-            if (platform.transform.position.x < player.transform.position.x - settings.cleanupDistance)
+            if (platform.transform.position.x < leadingPlayer.transform.position.x - settings.cleanupDistance)
             {
-                pool.ReturnPlatform(platform);
+                // pool.ReturnPlatform(platform);
+                if (platform.TryGetComponent(out NetworkObject netObj))
+                {
+                    netObj.Despawn();
+                }
                 platform.transform.localScale = Vector3.one; // reset pooled platform
                 activePlatforms.Dequeue();
             }
@@ -245,6 +309,7 @@ void TrySpawnPlatformObstacle(GameObject platform, float halfWidth)
     ];
 
     GameObject obstacle = Instantiate(prefab);
+    obstacle.GetComponent<NetworkObject>().Spawn();
 
     float minX = -halfWidth + obstacleSettings.minEdgeOffset;
     float maxX = halfWidth - obstacleSettings.minEdgeOffset;
@@ -254,7 +319,7 @@ void TrySpawnPlatformObstacle(GameObject platform, float halfWidth)
 
 
     obstacle.transform.localPosition = new Vector3(localX, 0.5f, 0);
-    obstacle.GetComponent<Obstacle>().Initialize(player.transform, settings.cleanupDistance);
+    obstacle.GetComponent<Obstacle>().Initialize(leadingPlayer.transform, settings.cleanupDistance);
 }
 
 void TrySpawnFlyingEnemy(float previousPlatformEnd, float newPlatformStart)
@@ -280,10 +345,11 @@ void TrySpawnFlyingEnemy(float previousPlatformEnd, float newPlatformStart)
         new Vector3(centerX, enemyY, 0),
         Quaternion.identity
     );
+    enemy.GetComponent<NetworkObject>().Spawn();
 
     FlyingObstacle script = enemy.GetComponent<FlyingObstacle>();
 
-    script.Initialize(player.transform, obstacleSettings.enemyCleanupDistance);
+    script.Initialize(leadingPlayer.transform, obstacleSettings.enemyCleanupDistance);
     script.SetPatrolRange(previousPlatformEnd, newPlatformStart);
 }
 
@@ -291,6 +357,7 @@ void TrySpawnFlyingEnemy(float previousPlatformEnd, float newPlatformStart)
     void OnGUI()
     {
         if (!Application.isPlaying) return;
+        if (leadingPlayer == null) return;
 
         GUIStyle style = new GUIStyle(GUI.skin.box);
         style.fontSize = 28;

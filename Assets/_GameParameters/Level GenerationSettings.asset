@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ecf5c9b681a24d04f9de74ba2a7191a8, type: 3}
   m_Name: Level GenerationSettings
   m_EditorClassIdentifier: Assembly-CSharp::LevelGenerationSettings
+  platformPrefab: {fileID: 8443798286558723637, guid: f89940fc5046e624eb00a962f4d1b516, type: 3}
   spawnDistance: 30
   cleanupDistance: 20
   platformCount: 5
