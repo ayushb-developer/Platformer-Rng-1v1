@@ -10,6 +10,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : NetworkBehaviour
 {
+    [SerializeField] SpriteRenderer playerSprite;
     [SerializeField] PlayerSettings settings;
     [SerializeField] DifficultySettings difficultySettings;
     [SerializeField] Transform groundCheck;
@@ -27,8 +28,7 @@ public class PlayerController : NetworkBehaviour
     // public Vector3 Position => transform.position;
 
     Rigidbody2D rb;
-    private LevelGenerator levelGenerator;
-    // private LevelGenerator levelGenerator;
+
     bool grounded;
     bool canMove = false;
 
@@ -36,7 +36,6 @@ public class PlayerController : NetworkBehaviour
     {
         input = GetComponent<InputHandler>();
         rb = GetComponent<Rigidbody2D>();
-        // levelGenerator = FindFirstObjectByType<LevelGenerator>();
     }
 
     void Start()
@@ -44,11 +43,7 @@ public class PlayerController : NetworkBehaviour
         if(GameFlow.Instance.State == GameState.WaitingForPlayers || GameFlow.Instance.State == GameState.WaitingToStart)
         {
             Initialize();
-        }
-        // else if(GameFlow.Instance.State == GameState.Playing)
-        // {
-        //     StartPlayer();
-        // }       
+        }     
     }
 
     private void Initialize()
@@ -80,6 +75,7 @@ public class PlayerController : NetworkBehaviour
 
         rb.gravityScale = gravity / -Physics2D.gravity.y;
     }
+
     void OnEnable()
     {
         GameFlow.Instance.OnStateChanged += HandleGameState;
@@ -93,6 +89,8 @@ public class PlayerController : NetworkBehaviour
     void Update()
     {
         if(!IsOwner) return;
+        Debug.Log($"Input: {input.MoveInput}");
+
         if (!canMove) return;
 
         grounded = Physics2D.OverlapCircle(
@@ -149,7 +147,14 @@ public class PlayerController : NetworkBehaviour
 
     public void OnReachedFinish()
     {
-        Debug.Log("Reached Finish!");
+        if (!IsOwner) return;
+
+        SubmitFinishServerRpc();
+    }
+
+    [ServerRpc]
+    void SubmitFinishServerRpc()
+    {
         GameFlow.Instance.FinishGame();
     }
 
@@ -166,7 +171,6 @@ public class PlayerController : NetworkBehaviour
         GameFlow.Instance.FinishGame();
     }
 
-        void HandleGameState(GameState state)
     void HandleGameState(GameState state)
     {
         switch (state)
