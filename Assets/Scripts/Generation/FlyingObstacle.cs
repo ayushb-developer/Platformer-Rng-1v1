@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class FlyingObstacle : Obstacle
 {
+    // [SerializeField] SpriteRenderer spriteRenderer;
     float leftLimit;
     float rightLimit;
 
@@ -28,10 +29,16 @@ public class FlyingObstacle : Obstacle
         transform.Translate(Vector2.right * dir * speed * Time.deltaTime);
 
         if (transform.position.x > rightLimit)
+        {
             movingRight = false;
+            // spriteRenderer.flipX = true;  // flip sprite when changing direction
+        }
 
         if (transform.position.x < leftLimit)
+        {
             movingRight = true;
+            // spriteRenderer.flipX = false;  // flip sprite when changing direction
+        }
     }
 
     void OnDrawGizmos()
