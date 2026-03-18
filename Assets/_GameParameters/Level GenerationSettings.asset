@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelGenerationSettings
   platformPrefab: {fileID: 8443798286558723637, guid: f89940fc5046e624eb00a962f4d1b516, type: 3}
   spawnDistance: 30
-  cleanupDistance: 20
-  platformCount: 5
+  cleanupDistance: 60
+  platformCount: 15
   minGap: 2
   gapMultiplier: 0.8
-  maxHeightChange: 2
-  minPlatformLengthScale: 4
-  maxPlatformLengthScale: 8
+  maxHeightChange: 3
+  minPlatformLengthScale: 3
+  maxPlatformLengthScale: 6

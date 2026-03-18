@@ -196,6 +196,8 @@ public class PlayerController : NetworkBehaviour
         // GameFlow.Instance.FinishGame();
         if(!IsOwner) return;
         Debug.Log("Hit Obstacle! Game Over for this player.");
+        // RaceManager.Instance.RegisterDeath(OwnerClientId);
+        OnDeath();
         StopMovement();
     }
 

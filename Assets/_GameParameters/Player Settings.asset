@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc5a954afa951684d837e6dbafebc178, type: 3}
   m_Name: Player Settings
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSettings
-  baseSpeed: 6
-  maxSpeed: 12
+  baseSpeed: 5
+  maxSpeed: 10
   jumpHeight: 3
   timeToApex: 0.35
