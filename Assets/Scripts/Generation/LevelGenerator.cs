@@ -206,6 +206,9 @@ public class LevelGenerator : NetworkBehaviour
         if (currentPattern == PatternStyle.WideGap)
             gap = Mathf.Lerp(maxGap * 0.7f, maxGap, Random.value);
 
+        if (gap < settings.minGap) 
+            gap = settings.minGap;
+            
         return gap;
     }
 

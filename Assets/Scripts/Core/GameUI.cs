@@ -1,23 +1,32 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
 
 public class GameUI : MonoBehaviour
 {
+    public static GameUI Instance { get; private set; }
     [SerializeField] GameObject startScreen;
-    [SerializeField] GameObject gameOverScreen;
+    // [SerializeField] GameObject gameOverScreen;
     [SerializeField] GameObject resultsScreen;
     [SerializeField] GameObject waitingForPlayersScreen;
     [SerializeField] GameObject lobbyScreen; //host/join buttons
+    [SerializeField] GameObject winScreen;
+    [SerializeField] GameObject loseScreen;
+    [SerializeField] GameObject spectateText;
 
-    [SerializeField] TextMeshProUGUI timeText;
     [SerializeField] Button restartButton;
 
+    void Awake()
+    {
+        Instance = this;
+    }
+    
     void Start()
     {
         restartButton.onClick.AddListener(OnRestartClicked);
-        restartButton.interactable = NetworkManager.Singleton.IsServer; //only allow restart for host
+        spectateText.SetActive(false);
+        winScreen.SetActive(false);
+        loseScreen.SetActive(false);
 
         if (GameFlow.Instance != null)
         {
@@ -34,14 +43,58 @@ public class GameUI : MonoBehaviour
             GameFlow.Instance.OnStateChanged -= UpdateUI;
     }
 
-    void UpdateUI(GameState newState)
+    void UpdateUI(GameState newGameState)
     {
-        lobbyScreen.SetActive(newState == GameState.Boot);
-        waitingForPlayersScreen.SetActive(newState == GameState.WaitingForPlayers);
-        startScreen.SetActive(newState == GameState.WaitingToStart);
-        gameOverScreen.SetActive(newState == GameState.Finished);
+        lobbyScreen.SetActive(newGameState == GameState.Boot);
+        waitingForPlayersScreen.SetActive(newGameState == GameState.WaitingForPlayers);
+        startScreen.SetActive(newGameState == GameState.WaitingToStart);
+        // gameOverScreen.SetActive(newGameState == GameState.Finished);
         // timeText.text = $"Time: {RaceManager.Instance.GetFinishTime():F2}s";
-        resultsScreen.SetActive(newState == GameState.Results);
+        resultsScreen.SetActive(newGameState == GameState.Results);
+        // restartButton.interactable = NetworkManager.Singleton.IsServer; //only allow restart for host
+
+        if( newGameState == GameState.Finished)
+        {
+            ShowLocalResult();
+        }
+        // {
+        //     bool localPlayerWon = RaceManager.Instance.GetWinner() == PlayerController.LocalPlayer;
+        //     winScreen.SetActive(localPlayerWon);
+        //     loseScreen.SetActive(!localPlayerWon);
+        // }
+        // else
+        // {
+        //     winScreen.SetActive(false);
+        //     loseScreen.SetActive(false);
+        // }
+    }
+
+    public void ShowLocalResult()
+    {
+        var player = PlayerController.LocalPlayer;
+
+        if (player == null) return;
+
+        winScreen.SetActive(false);
+        loseScreen.SetActive(false);
+        spectateText.SetActive(false);
+
+        switch (player.MyPlayerState)
+        {
+            case PlayerState.Finished:
+                winScreen.SetActive(true);
+                spectateText.SetActive(true);
+                break;
+
+            case PlayerState.Dead:
+                loseScreen.SetActive(true);
+                spectateText.SetActive(true);
+                break;
+
+            // default:
+            //     spectateText.SetActive(true);
+            //     break;
+        }
     }
 
     void OnRestartClicked()

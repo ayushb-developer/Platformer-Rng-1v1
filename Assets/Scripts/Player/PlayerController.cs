@@ -2,20 +2,34 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using Unity.Netcode;
+using UnityEngine.VFX;
+using Unity.VisualScripting;
+
+
 #if UNITY_EDITOR
 using UnityEngine.InputSystem;
 #endif
+
+public enum PlayerState
+{
+    None,
+    Alive,
+    Dead,
+    Finished
+}
 
 [RequireComponent(typeof(InputHandler))]
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : NetworkBehaviour
 {
-    [SerializeField] SpriteRenderer playerSprite;
+    public static PlayerController LocalPlayer {get ; private set;}
+
     [SerializeField] PlayerSettings settings;
     [SerializeField] DifficultySettings difficultySettings;
     [SerializeField] Transform groundCheck;
     [SerializeField] LayerMask groundLayer;
-
+    [SerializeField] PlayerVisual playerVisual;
+    
     private InputHandler input;
     float gravity;
     float jumpVelocity;
@@ -24,7 +38,8 @@ public class PlayerController : NetworkBehaviour
     public float MaxJumpDistance => PlayerVelocityX * settings.timeToApex * 2;
 
     public PlayerSettings Settings => settings;
-
+    public bool IsReady => IsSpawned;
+    public PlayerState MyPlayerState {get; private set;} = PlayerState.None;
     // public Vector3 Position => transform.position;
 
     Rigidbody2D rb;
@@ -50,30 +65,23 @@ public class PlayerController : NetworkBehaviour
     {
         Debug.Log("Initializing Player");
         canMove = false;
-        playerSprite.enabled = false;
+        playerVisual.DisableVisual();
         transform.position = new (0, 3, 0);
         rb.gravityScale = 0;
-
-        if(IsOwner)
-        {
-            playerSprite.color = Color.blue;
-        }
-        else
-        {
-            playerSprite.color = Color.orange;
-        }
+        // playerVisual.Initialize(rb, IsOwner);
     }
 
     private void StartPlayer()
     {
         Debug.Log("Starting Player");
         canMove = true;
-        playerSprite.enabled = true;
+        input.InitInput();
 
         gravity = 2 * settings.jumpHeight / Mathf.Pow(settings.timeToApex, 2);
         jumpVelocity = gravity * settings.timeToApex;
 
         rb.gravityScale = gravity / -Physics2D.gravity.y;
+        playerVisual.Initialize(rb, IsOwner);
     }
 
     void OnEnable()
@@ -88,16 +96,25 @@ public class PlayerController : NetworkBehaviour
 
     void Update()
     {
-        if(!IsOwner) return;
-        Debug.Log($"Input: {input.MoveInput}");
-
-        if (!canMove) return;
+        if(!IsSpawned) return;
 
         grounded = Physics2D.OverlapCircle(
             groundCheck.position,
             0.2f,
             groundLayer
         );
+        playerVisual.UpdateVisual(grounded);
+            
+        if (!IsOwner) return;
+        // Debug.Log($"Input: {input.MoveInput}");
+
+        if (!canMove) return;
+
+        // grounded = Physics2D.OverlapCircle(
+        //     groundCheck.position,
+        //     0.2f,
+        //     groundLayer
+        // );
 
 
         if (input.JumpPressed && grounded)
@@ -149,14 +166,23 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        MyPlayerState = PlayerState.Finished;
         SubmitFinishServerRpc();
+        GameUI.Instance?.ShowLocalResult();
     }
 
     [ServerRpc]
     void SubmitFinishServerRpc()
     {
-        GameFlow.Instance.FinishGame();
+        RaceManager.Instance.RegisterFinish(this);
     }
+
+
+    // [ServerRpc]
+    // void SubmitFinishServerRpc()
+    // {
+    //     GameFlow.Instance.FinishGame();
+    // }
 
     public void StopMovement()
     {
@@ -167,8 +193,10 @@ public class PlayerController : NetworkBehaviour
 
     public void OnHitObstacle()
     {
-        Debug.Log("Hit Obstacle! Game Over.");
-        GameFlow.Instance.FinishGame();
+        // GameFlow.Instance.FinishGame();
+        if(!IsOwner) return;
+        Debug.Log("Hit Obstacle! Game Over for this player.");
+        StopMovement();
     }
 
     void HandleGameState(GameState state)
@@ -195,6 +223,7 @@ public class PlayerController : NetworkBehaviour
 
         if (IsOwner)
         {
+            LocalPlayer = this;
             CameraFollow cam = FindFirstObjectByType<CameraFollow>();
             cam.SetTarget(transform);
         }
@@ -207,5 +236,28 @@ public class PlayerController : NetworkBehaviour
         float normalized = distance / difficultySettings.difficultyRampDistance;
 
         return difficultySettings.difficultyCurve.Evaluate(normalized);
+    }
+
+    public void OnDeath()
+    {
+        if (!IsOwner) return;
+
+        MyPlayerState = PlayerState.Dead;
+        StopMovement();
+
+        GameUI.Instance?.ShowLocalResult();
+        SubmitDeathServerRpc();
+        CameraFollow cam = FindFirstObjectByType<CameraFollow>();
+        if(RaceManager.Instance.LeadingPlayer != null)
+        {
+            cam.SetTarget(RaceManager.Instance.LeadingPlayer.transform);
+        }
+    }
+
+    [ServerRpc]
+    void SubmitDeathServerRpc(ServerRpcParams rpcParams = default)
+    {   
+        ulong clientId = OwnerClientId;
+        RaceManager.Instance.RegisterDeath(clientId);
     }
 }

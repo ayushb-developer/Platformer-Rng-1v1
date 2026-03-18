@@ -69,4 +69,9 @@ public class InputHandler : NetworkBehaviour
     {
         JumpPressed = false;
     }
+
+    public void InitInput()
+    {
+        MoveInput = Vector2.right;
+    }
 }
