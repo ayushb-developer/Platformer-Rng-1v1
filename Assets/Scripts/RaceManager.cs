@@ -52,6 +52,8 @@ public class RaceManager : NetworkBehaviour
         {
             if (alive) return; // still someone alive
         }
+
+        Debug.Log("All players finished or dead. Ending race.");
         GameFlow.Instance.FinishGame();
     }
 

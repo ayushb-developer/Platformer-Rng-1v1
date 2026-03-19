@@ -223,12 +223,12 @@ public class PlayerController : NetworkBehaviour
     {
         rb.simulated = IsOwner;
 
-        if (IsOwner)
-        {
-            LocalPlayer = this;
-            CameraFollow cam = FindFirstObjectByType<CameraFollow>();
-            cam.SetTarget(transform);
-        }
+        if (!IsOwner) return;
+        
+        LocalPlayer = this;
+        RaceManager.Instance.RegisterPlayer(OwnerClientId);
+        CameraFollow cam = FindFirstObjectByType<CameraFollow>();
+        cam.SetTarget(transform);
     }
     
     float GetLocalDifficulty() //so that each player can have their own difficulty based on how far they are in the level, not just one global difficulty
