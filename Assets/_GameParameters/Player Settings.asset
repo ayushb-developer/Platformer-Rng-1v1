@@ -16,3 +16,4 @@ MonoBehaviour:
   maxSpeed: 10
   jumpHeight: 3
   timeToApex: 0.35
+  deathY: -10

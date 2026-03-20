@@ -9,4 +9,6 @@ public class PlayerSettings : ScriptableObject
     [Header("Jump")]
     public float jumpHeight = 3f;
     public float timeToApex = 0.35f;
+    [Space]
+    public float deathY = -10f;
 }

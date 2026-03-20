@@ -46,6 +46,7 @@ public class PlayerController : NetworkBehaviour
 
     bool grounded;
     bool canMove = false;
+    private Vector3 startingPosition = new Vector3(0, 3, 0);
 
     void Awake()
     {
@@ -66,7 +67,7 @@ public class PlayerController : NetworkBehaviour
         Debug.Log("Initializing Player");
         canMove = false;
         playerVisual.DisableVisual();
-        transform.position = new (0, 3, 0);
+        transform.position = startingPosition;
         rb.gravityScale = 0;
         // playerVisual.Initialize(rb, IsOwner);
     }
@@ -74,6 +75,8 @@ public class PlayerController : NetworkBehaviour
     private void StartPlayer()
     {
         Debug.Log("Starting Player");
+        MyPlayerState = PlayerState.Alive;
+        // transform.position = startingPosition;
         canMove = true;
         input.InitInput();
 
@@ -107,15 +110,12 @@ public class PlayerController : NetworkBehaviour
             
         if (!IsOwner) return;
         // Debug.Log($"Input: {input.MoveInput}");
-
+        if(transform.position.y < settings.deathY)
+        {
+            Debug.Log("Fell to death! Game Over for this player.", this);
+            OnDeath();
+        }
         if (!canMove) return;
-
-        // grounded = Physics2D.OverlapCircle(
-        //     groundCheck.position,
-        //     0.2f,
-        //     groundLayer
-        // );
-
 
         if (input.JumpPressed && grounded)
         {
@@ -243,12 +243,14 @@ public class PlayerController : NetworkBehaviour
     public void OnDeath()
     {
         if (!IsOwner) return;
+        if(MyPlayerState == PlayerState.Dead) return;
 
         MyPlayerState = PlayerState.Dead;
         StopMovement();
+        SubmitDeathServerRpc();
 
         GameUI.Instance?.ShowLocalResult();
-        SubmitDeathServerRpc();
+        
         CameraFollow cam = FindFirstObjectByType<CameraFollow>();
         if(RaceManager.Instance.LeadingPlayer != null)
         {
