@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
+using TMPro;
 
 public class GameUI : MonoBehaviour
 {
     public static GameUI Instance { get; private set; }
     [SerializeField] GameObject startScreen;
+    [SerializeField] TMP_Text waitingToStartText;
     // [SerializeField] GameObject gameOverScreen;
     [SerializeField] GameObject resultsScreen;
     [SerializeField] GameObject waitingForPlayersScreen;
@@ -47,11 +49,23 @@ public class GameUI : MonoBehaviour
     {
         lobbyScreen.SetActive(newGameState == GameState.Boot);
         waitingForPlayersScreen.SetActive(newGameState == GameState.WaitingForPlayers);
+
         startScreen.SetActive(newGameState == GameState.WaitingToStart);
+        if( newGameState == GameState.WaitingToStart)
+        {
+            if(NetworkManager.Singleton.IsServer)
+            {
+                waitingToStartText.text = "Tap to start the race...";
+            }
+            else
+            {
+                waitingToStartText.text = "Waiting for host to start the race...";
+            }
+        }
         // gameOverScreen.SetActive(newGameState == GameState.Finished);
         // timeText.text = $"Time: {RaceManager.Instance.GetFinishTime():F2}s";
         resultsScreen.SetActive(newGameState == GameState.Results);
-        // restartButton.interactable = NetworkManager.Singleton.IsServer; //only allow restart for host
+
 
         if( newGameState == GameState.Finished)
         {
@@ -78,6 +92,7 @@ public class GameUI : MonoBehaviour
         winScreen.SetActive(false);
         loseScreen.SetActive(false);
         spectateText.SetActive(false);
+        restartButton.gameObject.SetActive(NetworkManager.Singleton.IsServer); //only allow restart for host TODO: allow restart on Finished for both
 
         switch (player.MyPlayerState)
         {

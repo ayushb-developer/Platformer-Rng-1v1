@@ -3,6 +3,9 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Starts the race when server player taps the screen or presses space. Also listens for other clients requesting to start the game and starts it if requested.
+/// </summary>
 public class GameStarter : MonoBehaviour
 {
     void Update()

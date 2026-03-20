@@ -78,7 +78,7 @@ public class PlayerController : NetworkBehaviour
         MyPlayerState = PlayerState.Alive;
         // transform.position = startingPosition;
         canMove = true;
-        input.InitInput();
+        // input.InitInput(); //temporary comment out initial input for testing
 
         gravity = 2 * settings.jumpHeight / Mathf.Pow(settings.timeToApex, 2);
         jumpVelocity = gravity * settings.timeToApex;
@@ -100,7 +100,7 @@ public class PlayerController : NetworkBehaviour
     void Update()
     {
         if(!IsSpawned) return;
-
+        if(MyPlayerState == PlayerState.Dead || MyPlayerState == PlayerState.Finished) return;
         grounded = Physics2D.OverlapCircle(
             groundCheck.position,
             0.2f,

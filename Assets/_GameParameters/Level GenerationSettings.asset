@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelGenerationSettings
   platformPrefab: {fileID: 8443798286558723637, guid: f89940fc5046e624eb00a962f4d1b516, type: 3}
   spawnDistance: 30
-  cleanupDistance: 60
+  cleanupDistance: 100
   platformCount: 15
   minGap: 2
   gapMultiplier: 0.8
